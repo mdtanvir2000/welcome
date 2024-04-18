@@ -1,0 +1,97 @@
+#include <iostream>
+#include <vector>
+#include <string>
+#include <cstdlib>
+#include <fstream>
+#include <sstream>
+#include <filesystem>
+
+using namespace std;
+namespace fs = std::filesystem;
+
+struct Version {
+    int versionNumber;
+    string content;
+};
+
+class VersionControlSystem {
+private:
+    vector<Version> versions;
+public:
+    VersionControlSystem() {
+        // Initialize with an initial version
+        versions.push_back({1, ""});
+    }
+
+    void commit(const string& content) {
+        // Create a new version with the provided content and increment version number
+        versions.push_back({versions.back().versionNumber + 1, content});
+        cout << "Committed version " << versions.back().versionNumber << endl;
+    }
+
+    void revert(int versionNumber) {
+        // Revert to the specified version if it exists
+        for (const Version& v : versions) {
+            if (v.versionNumber == versionNumber) {
+                versions.resize(versionNumber + 1);
+                cout << "Reverted to version " << versionNumber << endl;
+                return;
+            }
+        }
+        cout << "Version " << versionNumber << " not found." << endl;
+    }
+
+    void printCurrentVersion() {
+        cout << "Current version: " << versions.back().versionNumber << endl;
+        cout << "Content:\n" << versions.back().content << endl;
+    }
+};
+
+string getCurrentDirectoryContent() {
+    stringstream content;
+    for (const auto& entry : fs::directory_iterator(fs::current_path())) {
+        if (entry.is_regular_file()) {
+            ifstream file(entry.path());
+            if (file.is_open()) {
+                content << "File: " << entry.path().filename().string() << "\n";
+                content << file.rdbuf();
+                content << "\n\n";
+                file.close();
+            } else {
+                cerr << "Unable to open file: " << entry.path() << endl;
+            }
+        }
+    }
+    return content.str();
+}
+
+int main(int argc, char* argv[]) {
+    VersionControlSystem vcs;
+
+    if (argc == 1) {
+        cerr << "Usage: " << argv[0] << " <commit/revert> [version_number]" << endl;
+        return 1;
+    }
+
+    string command = argv[1];
+
+    if (command == "commit") {
+        string content = getCurrentDirectoryContent();
+        vcs.commit(content);
+    } else if (command == "revert") {
+        if (argc < 3) {
+            cerr << "Usage: " << argv[0] << " revert <version_number>" << endl;
+            return 1;
+        }
+        int versionNumber = atoi(argv[2]);
+        vcs.revert(versionNumber);
+    } else {
+        cerr << "Invalid command. Use 'commit' or 'revert'." << endl;
+        return 1;
+    }
+
+    vcs.printCurrentVersion();
+
+    return 0;
+}
+
