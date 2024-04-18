@@ -1,0 +1,14 @@
+## Version Control System (c++)
+
+A simple version control system is made in this repo.
+
+### Necessary tools
+
+In order to run the program only g++ or gcc is required
+
+
+### Usage
+
+1. The program is going to be used on the folder which have to be made into a repo
+2. The program has two main function of commit and revert changes.
+
